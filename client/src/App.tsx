@@ -1,8 +1,8 @@
 import { LockaLogo } from './components/LockaLogo'
 
-const CHAIN_NAMES: Record<string, string> = {
-  '8453': 'Base Mainnet',
-  '84532': 'Base Sepolia',
+const NETWORK_LABELS: Record<string, string> = {
+  'Test SDF Network ; September 2015': 'Stellar Testnet',
+  'Public Global Stellar Network ; September 2015': 'Stellar Mainnet',
 }
 
 const SCAFFOLD_CHECKLIST = [
@@ -24,10 +24,10 @@ function ConfiguredValue({ value }: { value: string }) {
 }
 
 function App() {
-  const chainId = import.meta.env.VITE_CHAIN_ID
-  const rpcUrl = import.meta.env.VITE_RPC_URL
+  const networkPassphrase = import.meta.env.VITE_NETWORK_PASSPHRASE
+  const rpcUrl = import.meta.env.VITE_SOROBAN_RPC_URL
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
-  const networkName = chainId ? (CHAIN_NAMES[chainId] ?? `Chain ${chainId}`) : ''
+  const networkName = networkPassphrase ? (NETWORK_LABELS[networkPassphrase] ?? 'Custom Network') : ''
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -96,7 +96,7 @@ function App() {
                 <ConfiguredValue value={networkName} />
               </div>
               <div className="flex items-center justify-between gap-4 py-2.5">
-                <span className="text-xs text-slate-500 uppercase tracking-wide">RPC URL</span>
+                <span className="text-xs text-slate-500 uppercase tracking-wide">Soroban RPC</span>
                 <ConfiguredValue value={rpcUrl} />
               </div>
               <div className="flex items-center justify-between gap-4 py-2.5">

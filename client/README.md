@@ -1,15 +1,18 @@
 # LockA Patient Client
 
 Frontend for the LockA patient app: create a health passport, view records, approve/revoke
-provider access, and share QR codes. Built with Vite, React, and TypeScript, targeting the
-Base (EVM) network. See the [LockA documentation](https://github.com/LockA-Medical-Passport/LockA-Documentation/blob/main/Documentation.md)
+provider access, and share QR codes. Built with Vite, React, and TypeScript, targeting **Stellar
+with Soroban smart contracts** and the **Freighter** wallet for signing. The UI follows the
+visual design of a parallel EVM implementation of LockA ([locka.remixdapp.eth.limo](https://locka.remixdapp.eth.limo/))
+— only its design system carries over, not its chain. See the root [README](../README.md) and
+the [LockA documentation](https://github.com/LockA-Medical-Passport/LockA-Documentation/blob/main/Documentation.md)
 for the full system design.
 
 ## Getting started
 
 ```bash
 npm install
-cp .env.example .env   # fill in RPC URL, chain ID, API base URL, contract addresses
+cp .env.example .env   # fill in Soroban RPC URL, network passphrase, API base URL, contract IDs
 npm run dev
 ```
 
