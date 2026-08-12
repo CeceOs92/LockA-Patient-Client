@@ -2,6 +2,7 @@ import { useState, type ComponentType } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { LockaLogo } from './LockaLogo'
 import { ConsentIcon, DashboardIcon, PassportIcon, RecordsIcon, type NavIconProps } from './NavIcons'
+import { WalletButton } from './wallet/WalletButton'
 
 interface NavItem {
   to: string
@@ -55,15 +56,7 @@ export function Navbar() {
           </nav>
 
           <div className="flex items-center gap-2 flex-shrink-0">
-            <button
-              type="button"
-              disabled
-              title="Wallet connection lands in a follow-up feature issue"
-              className="text-sm px-4 py-2 rounded-lg font-semibold text-white opacity-50 cursor-not-allowed"
-              style={{ background: 'linear-gradient(135deg, #0066ff, #00d4ff)' }}
-            >
-              Connect Wallet
-            </button>
+            <WalletButton />
             <button
               type="button"
               aria-label="Toggle menu"
