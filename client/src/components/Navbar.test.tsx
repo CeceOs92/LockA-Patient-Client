@@ -1,7 +1,13 @@
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { Navbar } from './Navbar'
+import { useWallet } from '../lib/wallet'
+
+vi.mock('../lib/wallet', async () => {
+  const actual = await vi.importActual<typeof import('../lib/wallet')>('../lib/wallet')
+  return { ...actual, useWallet: vi.fn() }
+})
 
 function renderNavbar(path = '/') {
   return render(
@@ -10,6 +16,23 @@ function renderNavbar(path = '/') {
     </MemoryRouter>,
   )
 }
+
+beforeEach(() => {
+  vi.mocked(useWallet).mockReturnValue({
+    address: null,
+    network: null,
+    networkPassphrase: null,
+    expectedNetworkPassphrase: 'Test SDF Network ; September 2015',
+    isInstalled: true,
+    isDetecting: false,
+    isConnecting: false,
+    isConnected: false,
+    isWrongNetwork: false,
+    error: null,
+    connect: vi.fn(),
+    disconnect: vi.fn(),
+  })
+})
 
 describe('Navbar', () => {
   it('renders the LockA wordmark and primary nav links', () => {
@@ -45,8 +68,8 @@ describe('Navbar', () => {
     expect(screen.queryByTestId('mobile-menu')).not.toBeInTheDocument()
   })
 
-  it('shows a disabled Connect Wallet button', () => {
+  it('shows an enabled Connect Wallet button wired to the wallet hook', () => {
     renderNavbar()
-    expect(screen.getByRole('button', { name: /connect wallet/i })).toBeDisabled()
+    expect(screen.getByRole('button', { name: /connect wallet/i })).toBeEnabled()
   })
 })
