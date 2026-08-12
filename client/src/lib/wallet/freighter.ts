@@ -4,6 +4,7 @@ import {
   getNetworkDetails as freighterGetNetworkDetails,
   isConnected as freighterIsConnected,
   requestAccess as freighterRequestAccess,
+  signTransaction as freighterSignTransaction,
 } from '@stellar/freighter-api'
 
 /** How long we wait for the extension to answer before treating it as not installed. */
@@ -96,4 +97,18 @@ export async function getNetworkDetails(): Promise<FreighterNetworkDetails> {
     networkUrl: result.networkUrl,
     sorobanRpcUrl: result.sorobanRpcUrl,
   }
+}
+
+export interface SignTransactionOptions {
+  networkPassphrase: string
+  address?: string
+}
+
+/** Signs a transaction XDR via the connected Freighter wallet and returns the signed XDR. */
+export async function signTransaction(transactionXdr: string, opts: SignTransactionOptions): Promise<string> {
+  const result = await freighterSignTransaction(transactionXdr, opts)
+  if (result.error) {
+    throw new FreighterError(result.error.message)
+  }
+  return result.signedTxXdr
 }
