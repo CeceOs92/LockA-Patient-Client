@@ -1,6 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import * as freighterApi from '@stellar/freighter-api'
-import { FreighterError, getAddress, getNetwork, getNetworkDetails, isFreighterInstalled, requestAccess } from './freighter'
+import {
+  FreighterError,
+  getAddress,
+  getNetwork,
+  getNetworkDetails,
+  isFreighterInstalled,
+  requestAccess,
+  signTransaction,
+} from './freighter'
 
 vi.mock('@stellar/freighter-api', () => ({
   isConnected: vi.fn(),
@@ -8,6 +16,7 @@ vi.mock('@stellar/freighter-api', () => ({
   getAddress: vi.fn(),
   getNetwork: vi.fn(),
   getNetworkDetails: vi.fn(),
+  signTransaction: vi.fn(),
 }))
 
 afterEach(() => {
@@ -17,6 +26,7 @@ afterEach(() => {
   vi.mocked(freighterApi.getAddress).mockReset()
   vi.mocked(freighterApi.getNetwork).mockReset()
   vi.mocked(freighterApi.getNetworkDetails).mockReset()
+  vi.mocked(freighterApi.signTransaction).mockReset()
 })
 
 describe('isFreighterInstalled', () => {
@@ -121,5 +131,28 @@ describe('getNetworkDetails', () => {
       error: { code: -1, message: 'boom' },
     })
     await expect(getNetworkDetails()).rejects.toThrow('boom')
+  })
+})
+
+describe('signTransaction', () => {
+  it('returns the signed XDR on success', async () => {
+    vi.mocked(freighterApi.signTransaction).mockResolvedValue({
+      signedTxXdr: 'AAAA...signed',
+      signerAddress: 'GABC123',
+    })
+    await expect(
+      signTransaction('AAAA...unsigned', { networkPassphrase: 'Test SDF Network ; September 2015' }),
+    ).resolves.toBe('AAAA...signed')
+  })
+
+  it('throws a FreighterError when the extension reports an error', async () => {
+    vi.mocked(freighterApi.signTransaction).mockResolvedValue({
+      signedTxXdr: '',
+      signerAddress: '',
+      error: { code: -4, message: 'User declined access' },
+    })
+    await expect(
+      signTransaction('AAAA...unsigned', { networkPassphrase: 'Test SDF Network ; September 2015' }),
+    ).rejects.toThrow(FreighterError)
   })
 })
