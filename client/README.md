@@ -20,21 +20,44 @@ If locka-contracts has nothing deployed on the network you're targeting, set
 `VITE_USE_MOCK_CONTRACTS=true` in `.env` and skip the contract IDs — see
 [Mock contracts](#mock-contracts-local-development-without-a-deployment) below.
 
+## App-wide context
+
+[`AppProviders`](src/app/providers.tsx) composes every global context in dependency order —
+toasts, then the wallet, then the contract client — and is mounted once in
+[main.tsx](src/main.tsx):
+
+```tsx
+<AppProviders>
+  <App />
+</AppProviders>
+```
+
+Routing stays outside it, so tests can bring their own router. Components read the contexts
+through `useToast()`, `useWallet()`, and `useSorobanClient()`.
+
+Pages that only work with a connected wallet are wrapped in
+[`RequireWallet`](src/components/wallet/RequireWallet.tsx) in [routes.tsx](src/routes.tsx). It
+renders a connect prompt in place of the page rather than redirecting, so the URL survives and
+the page appears the moment the wallet connects. `/passport`, `/records`, and `/consent` are
+gated; the dashboard stays public. Pass `title` / `description` to say what the page needs the
+wallet for.
+
 ## Talking to contracts
 
 Feature code never calls Soroban directly. It asks for the app's contract client and
 calls domain methods on it:
 
-```ts
-import { getContractClient } from './lib/soroban'
+```tsx
+import { useSorobanClient } from './lib/soroban'
 
-const locka = getContractClient()
+const locka = useSorobanClient()
 const passport = await locka.getPassport(address)
 const pending = (await locka.listAccessRequests(address)).filter((r) => r.status === 'pending')
 await locka.approveAccessRequest({ patient: address, requestId: pending[0].id })
 ```
 
-`getContractClient()` returns something implementing `LockaContractClient`
+Outside React, `getContractClient()` returns the same instance. Either way you get something
+implementing `LockaContractClient`
 ([types.ts](src/lib/soroban/types.ts)) — either the real client, which simulates reads and
 signs writes with Freighter ([realClient.ts](src/lib/soroban/realClient.ts)), or the mock
 ([mockClient.ts](src/lib/soroban/mockClient.ts)). Both satisfy the same interface, so no

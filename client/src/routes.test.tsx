@@ -3,8 +3,7 @@ import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import * as freighterApi from '@stellar/freighter-api'
 import { AppRoutes } from './routes'
-import { ToastProvider } from './components/toast'
-import { WalletProvider } from './lib/wallet'
+import { AppProviders } from './app/providers'
 
 vi.mock('@stellar/freighter-api', () => ({
   isConnected: vi.fn(),
@@ -14,19 +13,38 @@ vi.mock('@stellar/freighter-api', () => ({
   getNetworkDetails: vi.fn(),
 }))
 
+const TESTNET_PASSPHRASE = 'Test SDF Network ; September 2015'
+const ADDRESS = 'GABCDEFGHIJKLMNOPQRSTUVWXYZ234567'
+
+/** Extension present, but this site has not been authorised yet. */
+function mockInstalledWallet() {
+  vi.mocked(freighterApi.isConnected).mockResolvedValue({ isConnected: true })
+  vi.mocked(freighterApi.getAddress).mockResolvedValue({ address: '' })
+}
+
+/** Makes the mocked extension report an already-authorised account. */
+function mockConnectedWallet() {
+  vi.mocked(freighterApi.isConnected).mockResolvedValue({ isConnected: true })
+  vi.mocked(freighterApi.getAddress).mockResolvedValue({ address: ADDRESS })
+  vi.mocked(freighterApi.getNetworkDetails).mockResolvedValue({
+    network: 'TESTNET',
+    networkPassphrase: TESTNET_PASSPHRASE,
+    networkUrl: 'https://horizon-testnet.stellar.org',
+    sorobanRpcUrl: 'https://soroban-testnet.stellar.org',
+  })
+}
+
 beforeEach(() => {
   vi.mocked(freighterApi.isConnected).mockResolvedValue({ isConnected: false })
 })
 
 function renderRoutes(path: string) {
   return render(
-    <ToastProvider>
-      <WalletProvider>
-        <MemoryRouter initialEntries={[path]}>
-          <AppRoutes />
-        </MemoryRouter>
-      </WalletProvider>
-    </ToastProvider>,
+    <AppProviders>
+      <MemoryRouter initialEntries={[path]}>
+        <AppRoutes />
+      </MemoryRouter>
+    </AppProviders>,
   )
 }
 
@@ -48,5 +66,37 @@ describe('AppRoutes', () => {
   it('renders the Dashboard heading at the index route', () => {
     renderRoutes('/')
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('LockA')
+  })
+
+  it('leaves the dashboard readable without a wallet', async () => {
+    renderRoutes('/')
+    expect(await screen.findByText(/decentralized healthcare identity/i)).toBeInTheDocument()
+  })
+
+  it.each(['/passport', '/records', '/consent'])('gates %s behind a connected wallet', async (path) => {
+    mockInstalledWallet()
+    renderRoutes(path)
+
+    expect(await screen.findByRole('heading', { name: /connect your wallet/i })).toBeInTheDocument()
+    expect(screen.queryByText(/land in a follow-up feature issue/i)).not.toBeInTheDocument()
+  })
+
+  it('asks a visitor without the extension to install it before gating', async () => {
+    renderRoutes('/passport')
+
+    expect(await screen.findByRole('heading', { name: /freighter wallet required/i })).toBeInTheDocument()
+    expect(screen.queryByText(/land in a follow-up feature issue/i)).not.toBeInTheDocument()
+  })
+
+  it.each([
+    ['/passport', 'Patient Passport'],
+    ['/records', 'Medical Records'],
+    ['/consent', 'Consent Management'],
+  ])('renders %s once a wallet is connected', async (path, heading) => {
+    mockConnectedWallet()
+    renderRoutes(path)
+
+    expect(await screen.findByRole('heading', { name: heading })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: /connect your wallet/i })).not.toBeInTheDocument()
   })
 })
