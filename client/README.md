@@ -42,6 +42,13 @@ the page appears the moment the wallet connects. `/passport`, `/records`, and `/
 gated; the dashboard stays public. Pass `title` / `description` to say what the page needs the
 wallet for.
 
+`/passport` and `/passport/register` share [`PassportLayout`](src/pages/PassportLayout.tsx), so
+one wallet gate and one passport lookup ([`usePassport()`](src/lib/passport/usePassport.ts))
+serve both. A wallet with no passport is sent from `/passport` to the registration form; a
+wallet that already has one is sent back from `/passport/register` to its passport. To work on
+registration against seed data, set `VITE_MOCK_UNREGISTERED_PASSPORT=true` alongside
+`VITE_USE_MOCK_CONTRACTS=true`.
+
 ## Talking to contracts
 
 Feature code never calls Soroban directly. It asks for the app's contract client and
