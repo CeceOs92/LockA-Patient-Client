@@ -20,51 +20,21 @@ If locka-contracts has nothing deployed on the network you're targeting, set
 `VITE_USE_MOCK_CONTRACTS=true` in `.env` and skip the contract IDs — see
 [Mock contracts](#mock-contracts-local-development-without-a-deployment) below.
 
-## App-wide context
-
-[`AppProviders`](src/app/providers.tsx) composes every global context in dependency order —
-toasts, then the wallet, then the contract client — and is mounted once in
-[main.tsx](src/main.tsx):
-
-```tsx
-<AppProviders>
-  <App />
-</AppProviders>
-```
-
-Routing stays outside it, so tests can bring their own router. Components read the contexts
-through `useToast()`, `useWallet()`, and `useSorobanClient()`.
-
-Pages that only work with a connected wallet are wrapped in
-[`RequireWallet`](src/components/wallet/RequireWallet.tsx) in [routes.tsx](src/routes.tsx). It
-renders a connect prompt in place of the page rather than redirecting, so the URL survives and
-the page appears the moment the wallet connects. `/passport`, `/records`, and `/consent` are
-gated; the dashboard stays public. Pass `title` / `description` to say what the page needs the
-wallet for.
-
-`/passport` and `/passport/register` share [`PassportLayout`](src/pages/PassportLayout.tsx), so
-one wallet gate and one passport lookup ([`usePassport()`](src/lib/passport/usePassport.ts))
-serve both. A wallet with no passport is sent from `/passport` to the registration form; a
-wallet that already has one is sent back from `/passport/register` to its passport. To work on
-registration against seed data, set `VITE_MOCK_UNREGISTERED_PASSPORT=true` alongside
-`VITE_USE_MOCK_CONTRACTS=true`.
-
 ## Talking to contracts
 
 Feature code never calls Soroban directly. It asks for the app's contract client and
 calls domain methods on it:
 
-```tsx
-import { useSorobanClient } from './lib/soroban'
+```ts
+import { getContractClient } from './lib/soroban'
 
-const locka = useSorobanClient()
+const locka = getContractClient()
 const passport = await locka.getPassport(address)
 const pending = (await locka.listAccessRequests(address)).filter((r) => r.status === 'pending')
 await locka.approveAccessRequest({ patient: address, requestId: pending[0].id })
 ```
 
-Outside React, `getContractClient()` returns the same instance. Either way you get something
-implementing `LockaContractClient`
+`getContractClient()` returns something implementing `LockaContractClient`
 ([types.ts](src/lib/soroban/types.ts)) — either the real client, which simulates reads and
 signs writes with Freighter ([realClient.ts](src/lib/soroban/realClient.ts)), or the mock
 ([mockClient.ts](src/lib/soroban/mockClient.ts)). Both satisfy the same interface, so no
