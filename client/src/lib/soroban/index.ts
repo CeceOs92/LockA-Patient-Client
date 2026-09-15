@@ -1,6 +1,7 @@
 export { invokeContract, readContract } from './client'
 export type { ContractCallParams } from './client'
-export { SorobanError } from './errors'
+export { parseContractError, SorobanError } from './errors'
 export type { SorobanErrorStage } from './errors'
 export { getContractId, getContractIds } from './contracts'
 export type { ContractName } from './contracts'
+export { useContractCall } from './useContractCall'
