@@ -2,8 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import * as freighterApi from '@stellar/freighter-api'
 import App from './App'
-import { ToastProvider } from './components/toast'
-import { WalletProvider } from './lib/wallet'
+import { AppProviders } from './app/providers'
 
 vi.mock('@stellar/freighter-api', () => ({
   isConnected: vi.fn(),
@@ -20,11 +19,9 @@ beforeEach(() => {
 describe('App', () => {
   it('renders the LockA placeholder page', async () => {
     render(
-      <ToastProvider>
-        <WalletProvider>
-          <App />
-        </WalletProvider>
-      </ToastProvider>,
+      <AppProviders>
+        <App />
+      </AppProviders>,
     )
 
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('LockA')
